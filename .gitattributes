@@ -1,0 +1,7 @@
+# Regra geral primeiro: no gitattributes a ultima regra que casa e que vale.
+* text=auto eol=lf
+
+# Os blobs do vault sao ciphertext. Qualquer normalizacao de fim de linha
+# corrompe-os e a decifragem passa a falhar com "chave incorrecta", sem que
+# nada indique que a culpa foi do Git. Por isso esta regra vem depois.
+vault/*.bin binary

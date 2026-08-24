@@ -1,0 +1,9 @@
+node_modules/
+
+# Nunca dentro deste repositório. O conteúdo em claro e a passphrase vivem em
+# ../visoleo-source/. Estas linhas são uma segunda barreira, não a primeira: o
+# build aborta se encontrar qualquer um destes ficheiros aqui.
+.env
+leak-markers.json
+.wordlist.txt
+*.orig

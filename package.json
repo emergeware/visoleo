@@ -1,0 +1,14 @@
+{
+  "name": "visoleo-portal",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node build.mjs",
+    "serve": "node --run build && npx --yes serve@14 -l 4173 ."
+  },
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "hash-wasm": "^4.12.0"
+  },
+  "private": true
+}
