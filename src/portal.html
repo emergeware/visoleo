@@ -337,27 +337,43 @@ function renderHub(catalog, salt) {
   show(hub);
 }
 
+/** Espera que o iframe tenha altura real, no máximo alguns fotogramas. Não é
+ *  uma pausa a torcer para chegar: é a condição concreta que precisa de estar
+ *  satisfeita, verificada a cada fotograma. */
+async function frameLaidOut() {
+  const f = $('frame');
+  for (let i = 0; i < 20 && f.clientHeight === 0; i += 1) {
+    await new Promise(requestAnimationFrame);
+  }
+}
+
 async function openDoc(doc, salt, btn) {
-  const label = btn.querySelector('.lab').textContent;
+  const note = btn.querySelector('.note');
   btn.disabled = true;
-  btn.querySelector('.note').textContent = 'a decifrar…';
+  note.textContent = 'a decifrar…';
+
   try {
     if (!cache.has(doc.id)) {
       const key = await subKey(salt, `visoleo/v1/doc/${doc.id}`);
       cache.set(doc.id, new TextDecoder().decode(await open(key, doc.file, await fetchBlob(doc.file))));
     }
-    $('viewTitle').textContent = label;
-    $('frame').srcdoc = cache.get(doc.id);
-    show(view);
   } catch (e) {
-    btn.querySelector('.note').textContent = `não foi possível abrir: ${e.message}`;
-    return;
-  } finally {
+    note.textContent = `não foi possível abrir: ${e.message}`;
     btn.disabled = false;
-    if (btn.querySelector('.note').textContent === 'a decifrar…') {
-      btn.querySelector('.note').textContent = doc.note;
-    }
+    return;
   }
+  note.textContent = doc.note;
+  btn.disabled = false;
+
+  $('viewTitle').textContent = btn.querySelector('.lab').textContent;
+  show(view);
+
+  // O srcdoc só depois de o iframe estar visível e medido. Estes documentos
+  // calculam o layout a partir do viewport quando arrancam, e um iframe ainda
+  // escondido mede 0x0: o documento carrega, monta-se à volta de um ecrã de
+  // tamanho nulo, e não pinta nada.
+  await frameLaidOut();
+  $('frame').srcdoc = cache.get(doc.id);
 }
 
 // --- Ligações ------------------------------------------------------------
