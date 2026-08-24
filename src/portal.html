@@ -128,7 +128,16 @@ input:disabled{opacity:.55}
 
 /* ---------- visualizador ---------- */
 #view{height:100%;display:flex;flex-direction:column;background:var(--bg)}
-#frame{flex:1;width:100%;border:0;background:#fff}
+.stage{position:relative;flex:1;min-height:0}
+/* Fundo escuro, não branco: estes documentos demoram a pintar da primeira vez
+   — 300 KB de HTML e 100 KB de JavaScript a interpretar, com as fontes ainda
+   por chegar — e um iframe branco por baixo dá um clarão no meio do escuro. */
+#frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+#loading{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;background:var(--bg);color:var(--muted);font-size:13px;
+}
+#loading .bar{width:180px;margin:0}
 </style>
 </head>
 <body>
@@ -184,9 +193,15 @@ input:disabled{opacity:.55}
     <button class="ghost" id="back" type="button">&#8592; Documentos</button>
     <h2 id="viewTitle"></h2>
   </div>
-  <iframe id="frame"
-          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-          referrerpolicy="no-referrer"></iframe>
+  <div class="stage">
+    <iframe id="frame"
+            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+            referrerpolicy="no-referrer"></iframe>
+    <div id="loading" role="status" aria-live="polite">
+      <div class="bar"><i></i></div>
+      <span>A abrir o documento…</span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -366,6 +381,7 @@ async function openDoc(doc, salt, btn) {
   btn.disabled = false;
 
   $('viewTitle').textContent = btn.querySelector('.lab').textContent;
+  $('loading').hidden = false;
   show(view);
 
   // O srcdoc só depois de o iframe estar visível e medido. Estes documentos
@@ -412,8 +428,15 @@ $('peek').addEventListener('click', () => {
   pw.focus();
 });
 
+// O documento só tapa o indicador quando termina de carregar de facto. Limpar
+// o srcdoc também dispara 'load', daí a condição.
+$('frame').addEventListener('load', () => {
+  if ($('frame').srcdoc) $('loading').hidden = true;
+});
+
 $('back').addEventListener('click', () => {
   $('frame').srcdoc = '';
+  $('loading').hidden = false;
   show(hub);
 });
 
@@ -421,6 +444,7 @@ $('lock').addEventListener('click', () => {
   master = null;
   cache.clear();
   $('frame').srcdoc = '';
+  $('loading').hidden = false;
   pw.value = '';
   say('');
   show(gate);
